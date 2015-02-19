@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'sinatra'
+require 'json'
 
 git = '/usr/bin/git'
 config_file = File.join(ENV['HOME'], '.git-hooks.conf')
@@ -14,8 +15,18 @@ end
 
 
 post '/update' do
-  branch = params[:branch] or halt 400
-  repo = params[:repository] or halt 400
+  if request.media_type == 'application/json'
+    request.body.rewind
+    data = JSON.parse(request.body.read)
+    branch = data['ref']
+    repo = data['repository']['name']
+  else
+    branch = params[:branch]
+    repo = params[:repository]
+  end
+
+  halt 400, "Missing required parameters" unless branch and repo
+  repo.sub!(%r,^refs/heads/,,'')
 
   path = repository_paths.fetch(repo) do 
     halt 400, "Repository #{repo} is not configured"
