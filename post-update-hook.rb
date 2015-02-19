@@ -2,7 +2,7 @@
 require 'net/http'
 require 'uri'
 
-remote_hook = URI.parse('http://git-hooks.heaven.fu.cr/update')
+remote_hook = URI.parse('http://git-hooks/update')
 
 ARGV.each do |refname|
   next unless refname.match %r(^refs/heads/)
