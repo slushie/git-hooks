@@ -1,15 +1,25 @@
 #!/usr/bin/env ruby
 require 'sinatra'
 
-base_path = File.join(ENV['HOME'], 'heaven_container')
 git = '/usr/bin/git'
+config_file = File.join(ENV['HOME'], '.git-hooks.conf')
+
+if File.exists? config_file
+  repository_paths = File.readlines(config_file).map do |line|
+    line.chomp.split(/\s+/)
+  end.to_h
+else
+  repository_paths = Hash.new
+end
+
 
 post '/update' do
   branch = params[:branch] or halt 400
   repo = params[:repository] or halt 400
 
-  path = File.expand_path(File.join(base_path, repo))
-  halt 400 unless path.start_with? base_path
+  path = repository_paths.fetch(repo) do 
+    halt 400, "Repository #{repo} is not configured"
+  end
 
   env = { 'GIT_WORK_TREE' => path, 'GIT_DIR' => File.join(path, '.git') }
   redirect = { err: [:child, :out] }
