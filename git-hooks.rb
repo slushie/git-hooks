@@ -26,7 +26,7 @@ post '/update' do
   end
 
   halt 400, "Missing required parameters" unless branch and repo
-  repo.sub!(%r,^refs/heads/,,'')
+  branch.sub!(%r,^refs/heads/,,'')
 
   path = repository_paths.fetch(repo) do 
     halt 400, "Repository #{repo} is not configured"
