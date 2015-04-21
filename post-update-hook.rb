@@ -2,7 +2,7 @@
 require 'net/http'
 require 'uri'
 
-callback_hooks = File.readlines('remote-git-hooks.txt')
+callback_hooks = File.readlines('remote-git-hooks.txt').map(&:strip)
 
 ARGV.each do |refname|
   next unless refname.match %r(^refs/heads/)
@@ -12,10 +12,16 @@ ARGV.each do |refname|
   repo = File.basename(repo_path.sub(%r(/?.git/?$), ''))
 
   callback_hooks.each do |remote|
-    response = Net::HTTP.post_form remote, {
-      'branch'      => branch,
-      'repository'  => repo
-    }
+    response = 
+      begin
+        Net::HTTP.post_form URI.parse(remote), {
+          'branch'      => branch,
+          'repository'  => repo
+        }
+      rescue => ex
+        puts "POST #{remote} failed: #{ex.inspect}"
+        next
+      end
 
     if response.code.to_i == 406
       puts response.body.chomp
@@ -23,9 +29,9 @@ ARGV.each do |refname|
     end
 
     if response.code.to_i != 200
-      puts "Remote hook #{remote_hook} failed: #{response.code} #{response.message}\n"
+      puts "Remote hook #{remote} failed: #{response.code} #{response.message}\n"
     end
 
-    puts response.body
+    puts "#{remote} => #{response.body}"
   end
 end
