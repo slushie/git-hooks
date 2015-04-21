@@ -24,7 +24,7 @@ ARGV.each do |refname|
       end
 
     if response.code.to_i == 406
-      puts response.body.chomp
+      puts "#{remote} => #{response.body.chomp}"
       next
     end
 
